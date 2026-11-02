@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CPU Scheduling Lab — Interactive Analyzer</title>
+<style>
+:root{--bg:#0b1020;--panel:#151d31;--panel2:#1c2740;--line:#2b3953;--text:#eaf1ff;--muted:#9fb0ce;--accent:#71c8ff;--green:#58dbb5;--gold:#ffcb70;--red:#ff8095}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0%,#19294b 0,#0b1020 45%);font:15px/1.5 system-ui,Segoe UI,Arial;color:var(--text)}
+header,.wrap{max-width:1280px;margin:auto;padding:22px}header{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:800}.logo span{background:linear-gradient(130deg,#3c9eff,#65dec5);color:#061020;border-radius:13px;padding:12px}
+small,.muted{color:var(--muted)}h1{font-size:clamp(28px,4vw,48px);line-height:1.1;margin:12px 0}h2{font-size:20px;margin:0 0 4px}h3{font-size:16px;margin:0 0 10px}
+.hero{padding:20px 0 28px}.hero p{max-width:770px;color:var(--muted)}.tag{display:inline-block;border:1px solid #406184;color:#9bdcff;padding:5px 12px;border-radius:30px;font-size:12px}
+.grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:18px}.card{background:linear-gradient(150deg,#19243b,#121a2b);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:18px;box-shadow:0 10px 30px #0002}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}button,select,input{font:inherit}button{cursor:pointer;background:#263852;color:var(--text);border:1px solid #3c5070;border-radius:10px;padding:9px 13px;font-weight:650}button:hover{filter:brightness(1.17)}button.primary{background:linear-gradient(115deg,#2d9de9,#218caa);border-color:#52c6f2;color:#fff}button.danger{color:#ffb6c2}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #8ed7ff;outline-offset:2px}
+label{display:block;font-size:13px;color:#b8c8e3;margin:8px 0 5px}input[type=number],input[type=text],select{width:100%;background:#0d1729;color:#fff;border:1px solid #3b4d69;border-radius:9px;padding:9px}
+input[type=range]{width:100%;accent-color:#67c6fc}input[type=checkbox]{accent-color:#69caff}
+.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #2c3a54}th{color:#9fbbdd;font-size:12px}td input{min-width:70px}td input[type=text]{min-width:82px}td button{padding:5px 9px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}.sliderbox{background:#101b2d;border:1px solid var(--line);padding:12px;border-radius:12px}.sliderhead{display:flex;justify-content:space-between;gap:8px}.sliderhead strong{color:var(--accent)}.checks{display:grid;grid-template-columns:1fr 1fr;gap:7px}.checks label{display:flex;align-items:center;gap:7px;background:#111c2e;padding:10px;border-radius:10px;margin:0}
+.statgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat{background:#101b2e;border:1px solid var(--line);padding:13px;border-radius:13px}.stat b{font-size:23px;display:block}.stat span{font-size:12px;color:var(--muted)}
+.algo{border:1px solid #30415f;border-radius:15px;padding:16px;margin-top:16px;background:#111b2e}.algoh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.pill{font-size:11px;background:#243d57;color:#b8e7ff;padding:5px 10px;border-radius:30px}
+.timeline{overflow-x:auto;padding:16px 0 6px}.gantt{display:flex;min-width:500px;height:60px;overflow:hidden;border-radius:8px;border:1px solid #405473}.segment{position:relative;min-width:2px;display:flex;align-items:center;justify-content:center;color:#061323;font-size:12px;font-weight:800;border-right:2px solid #101b2d}.segment.idle{background:#68788f!important;color:#fff}.segment .dur{position:absolute;bottom:2px;font-size:9px;opacity:.75}.ticks{display:flex;justify-content:space-between;color:#9caeca;font-size:11px}.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#b8c8df;margin:7px 0}.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.metric{background:#1c2a41;padding:10px;border-radius:9px}.metric b{display:block;font-size:17px}.metric small{font-size:11px}
+.bars{display:grid;gap:11px}.barrow{display:grid;grid-template-columns:210px 1fr 48px;align-items:center;gap:10px;font-size:13px}.track{height:18px;background:#0d1829;border-radius:6px;overflow:hidden}.fill{height:100%;border-radius:6px}.note{font-size:12px;color:var(--muted)}.error{color:#ffc2ca;min-height:18px}.success{color:#9beacb}
+footer{padding:30px;text-align:center;color:#879bb8}.hidden{display:none}.empty{text-align:center;padding:24px;color:var(--muted)}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.statgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.controls{grid-template-columns:1fr}.statgrid{grid-template-columns:1fr 1fr}.card{padding:14px}.barrow{grid-template-columns:145px 1fr 40px;font-size:11px}}
+@media print{body{background:#fff;color:#111}header,.hero,.setup,.actions,footer{display:none!important}.card,.algo{background:#fff;color:#111;box-shadow:none;border-color:#aaa}.muted,.note,small{color:#444!important}.segment{print-color-adjust:exact;-webkit-print-color-adjust:exact}.stat,.metric{background:#eee;color:#111}}
+
+/* Animated CPU scheduling demonstration */
+.live-layout{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:18px;margin-top:15px}
+.live-screen{background:#0b1729;border:1px solid #355172;border-radius:15px;padding:18px;min-width:0}
+.live-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.live-light{display:inline-flex;align-items:center;gap:8px;color:#9beacb;font-weight:750;font-size:13px}
+.live-light::before{content:"";height:10px;width:10px;border-radius:50%;background:#58dbb5;box-shadow:0 0 0 4px #58dbb522}
+.live-light.playing::before{animation:cpu-pulse 1s infinite}
+@keyframes cpu-pulse{50%{box-shadow:0 0 0 11px #58dbb500;opacity:.55}}
+.cpu-core{display:flex;align-items:center;gap:16px;padding:20px 0}
+.cpu-icon{height:76px;width:76px;flex:none;border:2px solid #5cc7fa;background:linear-gradient(145deg,#183f62,#14243f);border-radius:17px;display:grid;place-items:center;font-size:36px;box-shadow:inset 0 0 18px #409eea33}
+.cpu-icon.playing{animation:cpu-glow 1s ease-in-out infinite alternate}
+@keyframes cpu-glow{to{box-shadow:0 0 24px #3dbeff99,inset 0 0 18px #409eea44;transform:scale(1.04)}}
+.cpu-name{font-size:26px;font-weight:850;color:#75d9ff;line-height:1.2}
+.cpu-sub{font-size:12px;color:#9fb0ce}
+.live-progress{height:13px;border-radius:100px;background:#273854;overflow:hidden;margin:12px 0 8px}
+.live-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#37a6f1,#58dbb5);transition:width .2s}
+.live-track{display:flex;height:40px;border:1px solid #3c5575;border-radius:8px;overflow:hidden;margin:15px 0 6px;position:relative}
+.live-track-item{height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-right:1px solid #132236;color:#091524;font-size:11px;font-weight:800;min-width:0;opacity:.25;transition:opacity .15s}
+.live-track-item.executed{opacity:1}.live-track-item.current{outline:2px solid white;outline-offset:-2px}
+.live-control{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:14px}
+.live-control>div{min-width:150px}.live-control select{max-width:280px}
+.live-clock{text-align:center;background:#14243c;border:1px solid #304969;border-radius:12px;padding:15px}
+.live-clock b{display:block;font-size:32px;color:#75d9ff;font-variant-numeric:tabular-nums}
+.live-clock small{color:#a7bada}
+.queue-visual{display:flex;gap:7px;flex-wrap:wrap;min-height:35px;align-items:center;margin:9px 0}
+.process-chip{border:1px solid #5077a0;border-radius:7px;padding:5px 10px;background:#223d5b;font-weight:750;font-size:12px}
+.live-status{color:#a4e5f6;font-size:13px;min-height:20px}
+@media(max-width:670px){.live-layout{grid-template-columns:1fr}.cpu-core{padding:12px 0}}
+@media print{#liveDemo{display:none!important}}
+.gantt-boundaries{height:27px;position:relative;margin:0 12px 2px 0;font-size:10px;color:#e6f1ff}.boundary-mark{position:absolute;top:3px;transform:translateX(-50%);font-variant-numeric:tabular-nums}.boundary-mark:first-child{transform:none}.boundary-final{transform:translateX(-100%)}
+</style></head><body>
+<header><div class="logo"><span>CPU</span><div>Scheduling Lab<br><small>Interactive Algorithm Analyzer</small></div></div></header>
+<div class="wrap"><section class="hero"><span class="tag">OPERATING SYSTEMS • INTERACTIVE SIMULATOR</span><h1>Understand scheduling.<br><span style="color:#72caff">Compare every decision.</span></h1><p>Adjust process arrival, burst and priority using sliders or numeric inputs. Run FCFS, SJF (non-preemptive), SRTF (preemptive SJF), Priority (preemptive and non-preemptive), and Round Robin on exactly the same workload.</p></section>
+<div class="grid setup"><div>
+<section class="card"><div class="row between"><div><h2>01 · Process builder</h2><small>Change values directly, or select a sample workload</small></div><div class="row"><button id="add">+ Add process</button><button id="reset">Reset</button></div></div>
+<div class="row" style="margin:12px 0"><select id="preset" aria-label="Example workload" style="max-width:280px"><option value="mixed">Mixed workload</option><option value="short">Short and long jobs</option><option value="staggered">Staggered arrivals</option><option value="priority">Priority variation</option><option value="same">Similar burst times</option></select><button id="load">Load example</button><button id="random">Randomize</button></div>
+<div class="table-scroll"><table><thead><tr><th>Process</th><th>Arrival</th><th>Burst</th><th>Priority</th><th></th></tr></thead><tbody id="processRows"></tbody></table></div>
+<p class="note">Priority 1 = highest priority. Compare preemptive and non-preemptive scheduling separately. Values are nonnegative integer time units; burst must be at least 1.</p>
+</section>
+<section class="card"><h2>02 · Slider controls</h2><p class="muted">Select a process to adjust its values interactively.</p>
+<div class="controls"><div><label for="selected">Process to edit</label><select id="selected"></select></div><div class="sliderbox"><div class="sliderhead"><label for="quantum">RR time quantum</label><strong id="qValue">2</strong></div><input id="quantum" type="range" min="1" max="12" value="2"></div></div>
+<div class="controls" style="margin-top:12px"><div class="sliderbox"><div class="sliderhead"><label for="arrivalSlider">Arrival time</label><strong id="arrivalValue">0</strong></div><input id="arrivalSlider" type="range" min="0" max="30"></div>
+<div class="sliderbox"><div class="sliderhead"><label for="burstSlider">Burst time</label><strong id="burstValue">1</strong></div><input id="burstSlider" type="range" min="1" max="30"></div>
+<div class="sliderbox"><div class="sliderhead"><label for="prioritySlider">Priority</label><strong id="priorityValue">1</strong></div><input id="prioritySlider" type="range" min="1" max="20"></div>
+<div class="sliderbox"><label for="autoRun"><input type="checkbox" id="autoRun" checked> Auto-update charts</label><small>Changes run immediately when enabled.</small></div></div>
+</section></div>
+<div><section class="card"><h2>03 · Choose algorithms</h2><p class="muted">Compare any combination.</p><div class="checks" id="algos"><label><input type="checkbox" value="FCFS" checked> FCFS</label><label><input type="checkbox" value="SJF" checked> SJF (Non-preemptive)</label><label><input type="checkbox" value="SRTF" checked> SRTF (Preemptive SJF)</label><label><input type="checkbox" value="Priority" checked> Priority (Non-preemptive)</label><label><input type="checkbox" value="Priority-P" checked> Priority (Preemptive)</label><label><input type="checkbox" value="RR" checked> Round Robin</label></div>
+<div class="row actions" style="margin-top:20px"><button class="primary" id="run">▶ Run comparison</button><button id="csv">↓ Export CSV</button><button id="json">↓ Export JSON</button></div><p id="error" class="error" role="alert"></p>
+</section>
+<section class="card"><h2>Metric guide</h2><p><b>Waiting time</b><br><small>Turnaround − Burst</small></p><p><b>Turnaround time</b><br><small>Completion − Arrival</small></p><p><b>Response time</b><br><small>First start − Arrival</small></p><p><b>Throughput</b><br><small>Completed processes ÷ total elapsed time</small></p><p class="note">This is a deterministic educational simulation. No context-switch overhead, I/O blocking, or dynamic aging is modeled. CPU utilization and throughput are measured from time 0 (including any initial idle interval). Ties use earlier arrival then input order. For Round Robin, processes arriving at a quantum boundary join the queue before the unfinished process is requeued.</p></section></div></div>
+<section class="card" id="liveDemo">
+<div class="row between"><div><h2>▶ Live CPU execution simulator</h2><small>Watch the selected scheduling algorithm run, one time unit at a time.</small></div><span class="live-light" id="liveLight">READY TO SIMULATE</span></div>
+<div class="live-control"><div style="flex:1"><label for="liveAlgorithm">Algorithm to animate</label><select id="liveAlgorithm"></select></div><button class="primary" id="playAnimation">▶ Play animation</button><button id="stepAnimation">⏭ Next step</button><button id="restartAnimation">↺ Restart</button><div><label for="animationSpeed">Animation speed</label><select id="animationSpeed"><option value="900">Slow</option><option value="450" selected>Normal</option><option value="160">Fast</option></select></div></div>
+<div class="live-layout"><div class="live-screen"><div class="live-top"><strong>CPU execution</strong><span id="liveProgressText" class="note">0% completed</span></div><div class="cpu-core"><div class="cpu-icon" id="cpuIcon">▣</div><div><div class="cpu-name" id="liveProcess">Ready</div><div class="cpu-sub" id="liveProcessInfo">Press Play to start processing</div></div></div><div class="live-progress"><div class="live-progress-fill" id="liveProgressFill"></div></div><div class="live-status" id="liveStatus" role="status">Waiting for simulation</div><div class="live-track" id="liveTrack"></div><div class="row between note"><span>0</span><span id="liveFinish">Finish: —</span></div></div><div><div class="live-clock"><small>Simulation clock</small><b id="liveClock">0</b><small>Time units elapsed</small></div><h3 style="margin-top:19px">Ready processes</h3><div class="queue-visual" id="readyQueue"></div><p class="note">This animation shows simulated CPU time, not your computer's actual processor usage.</p></div></div>
+</section>
+<section class="card" id="overview"><div class="row between"><div><h2>Experiment overview</h2><small>Computed from the current workload</small></div><button onclick="window.print()">Print results</button></div><div class="statgrid" id="stats"></div><p id="winner" class="note"></p></section>
+<section class="card"><h2>Algorithm performance comparison</h2><p class="muted">Lower waiting, turnaround and response times are better for these metrics.</p><div class="row" id="metricButtons" style="margin:14px 0"><button data-metric="avgWaiting" class="primary">Waiting</button><button data-metric="avgTurnaround">Turnaround</button><button data-metric="avgResponse">Response</button><button data-metric="utilization">CPU utilization</button></div><div class="bars" id="bars"></div><div class="table-scroll" style="margin-top:20px"><table><thead><tr><th>Algorithm</th><th>Avg wait</th><th>Avg turnaround</th><th>Avg response</th><th>Utilization</th><th>Throughput</th></tr></thead><tbody id="compareTable"></tbody></table></div></section>
+<section class="card"><h2>Gantt charts and detailed process results</h2><p class="muted">Colored blocks show the exact CPU execution order. Boundary timestamps below each block are the actual times. Hover for the interval.</p><div id="results"></div></section>
+</div><footer>CPU Scheduling Lab · FCFS · SJF · SRTF · Priority (Preemptive / Non-preemptive) · Round Robin · Browser-based simulator</footer>
+<script>
+"use strict";
+const colors=["#71c8ff","#66dfb4","#ffcd78","#c2a3ff","#ff8f9d","#7edbe7","#f3a2dc","#a5df77","#ffa66b","#8db3ff"];
+const presets={
+ mixed:[[0,6,3],[1,3,1],[2,8,4],[3,2,2]],
+ short:[[0,12,4],[0,2,2],[0,1,1],[0,4,3]],
+ staggered:[[0,6,2],[2,4,1],[5,2,3],[8,3,2]],
+ priority:[[0,4,4],[0,5,1],[0,2,3],[0,3,2]],
+ same:[[0,4,3],[0,5,2],[0,4,1],[0,5,4]]
+};
+let processes=[],quantum=2,last=[],metric="avgWaiting",seq=0;
+let animationTimer=null,animationTime=0,animationAlgorithm="FCFS",animationPlaying=false;
+const el=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=x=>Number(x).toFixed(2);
+function loadPreset(k){processes=(presets[k]||presets.mixed).map((r,i)=>({id:"P"+(i+1),arrival:r[0],burst:r[1],priority:r[2],uid:++seq}));refresh();}
+function validate(ps,q){if(!ps.length)throw Error("Add at least one process.");if(ps.length>20)throw Error("Maximum 20 processes.");if(!Number.isInteger(q)||q<1||q>100)throw Error("Quantum must be 1–100.");const names=new Set();for(const p of ps){if(!p.id.trim())throw Error("Process IDs cannot be blank.");if(names.has(p.id))throw Error("Process IDs must be unique.");names.add(p.id);for(const k of ["arrival","burst","priority"]){if(!Number.isInteger(p[k]))throw Error("All values must be whole numbers.");}if(p.arrival<0||p.arrival>1000||p.burst<1||p.burst>1000||p.priority<1||p.priority>1000)throw Error("Arrival 0–1000, burst 1–1000, priority 1–1000.");}}
+function simulate(ps,type,q){
+ validate(ps,q);
+ const items=ps.map((p,i)=>({...p,index:i,remaining:p.burst,first:null,completion:null})), timeline=[];
+ let time=0,done=0;
+ const push=(id,start,end)=>{if(end<=start)return;const prev=timeline[timeline.length-1];if(prev&&prev.id===id&&prev.end===start)prev.end=end;else timeline.push({id,start,end});};
+ const pick=(ready)=>ready.sort((a,b)=>type==="FCFS"?(a.arrival-b.arrival||a.index-b.index):type==="SJF"?(a.burst-b.burst||a.arrival-b.arrival||a.index-b.index):(a.priority-b.priority||a.arrival-b.arrival||a.index-b.index))[0];
+ if(type==="SRTF"||type==="Priority-P"){
+  // Reconsider after every one-unit interval so newly arrived processes can preempt.
+  while(done<items.length){
+   const ready=items.filter(p=>p.remaining>0&&p.arrival<=time);
+   if(!ready.length){const next=Math.min(...items.filter(p=>p.remaining>0).map(p=>p.arrival));push("Idle",time,next);time=next;continue;}
+   ready.sort((a,b)=>type==="SRTF"?(a.remaining-b.remaining||a.arrival-b.arrival||a.index-b.index):(a.priority-b.priority||a.arrival-b.arrival||a.index-b.index));
+   const p=ready[0];if(p.first===null)p.first=time;
+   push(p.id,time,time+1);time++;p.remaining--;
+   if(p.remaining===0){p.completion=time;done++;}
+  }
+ }else if(type!=="RR"){
+ while(done<items.length){
+ const ready=items.filter(p=>p.completion===null&&p.arrival<=time);
+ if(!ready.length){const next=Math.min(...items.filter(p=>p.completion===null).map(p=>p.arrival));push("Idle",time,next);time=next;continue;}
+ const p=pick(ready);p.first=time;push(p.id,time,time+p.burst);time+=p.burst;p.completion=time;done++;
+ }
+ }else{
+ const arrivals=[...items].sort((a,b)=>a.arrival-b.arrival||a.index-b.index);
+ const queue=[];let ai=0;
+ const enqueue=()=>{while(ai<arrivals.length&&arrivals[ai].arrival<=time)queue.push(arrivals[ai++]);};
+ while(done<items.length){
+ enqueue();
+ if(!queue.length){const next=arrivals[ai].arrival;push("Idle",time,next);time=next;enqueue();}
+ const p=queue.shift();if(p.first===null)p.first=time;
+ const length=Math.min(q,p.remaining);push(p.id,time,time+length);time+=length;p.remaining-=length;
+ enqueue();if(p.remaining>0)queue.push(p);else{p.completion=time;done++;}
+ }
+ }
+ const rows=items.map(p=>({id:p.id,arrival:p.arrival,burst:p.burst,priority:p.priority,first:p.first,completion:p.completion,turnaround:p.completion-p.arrival,waiting:p.completion-p.arrival-p.burst,response:p.first-p.arrival}));
+ const start=0,end=time,elapsed=end-start,busy=items.reduce((s,p)=>s+p.burst,0);
+ const mean=k=>rows.reduce((s,p)=>s+p[k],0)/rows.length;
+ return {type,quantum:q,rows,timeline,summary:{avgWaiting:mean("waiting"),avgTurnaround:mean("turnaround"),avgResponse:mean("response"),utilization:100*busy/elapsed,throughput:items.length/elapsed,makespan:elapsed,finish:end}};
+}
+function refresh(){
+ el("processRows").innerHTML=processes.map((p,i)=>`<tr><td><input aria-label="Process ID ${i+1}" data-i="${i}" data-key="id" type="text" value="${esc(p.id)}"></td>${["arrival","burst","priority"].map(k=>`<td><input aria-label="${k} for ${esc(p.id)}" type="number" min="${k==="arrival"?0:1}" max="1000" data-i="${i}" data-key="${k}" value="${p[k]}"></td>`).join("")}<td><button class="danger" data-remove="${i}" aria-label="Remove ${esc(p.id)}">×</button></td></tr>`).join("");
+ const prev=el("selected").value;
+ el("selected").innerHTML=processes.map((p,i)=>`<option value="${i}">${esc(p.id)}</option>`).join("");
+ if(prev&&Number(prev)<processes.length)el("selected").value=prev;
+ updateSliders();if(el("autoRun").checked)run();
+}
+function updateSliders(){const p=processes[Number(el("selected").value)||0];for(const k of ["arrival","burst","priority"]){const v=p?p[k]:0;el(k+"Slider").value=Math.min(v,Number(el(k+"Slider").max));el(k+"Value").textContent=v;}}
+function run(){
+ stopAnimation();
+ try{const chosen=[...document.querySelectorAll("#algos input:checked")].map(x=>x.value);if(!chosen.length)throw Error("Select at least one algorithm.");last=chosen.map(a=>simulate(processes,a,quantum));el("error").textContent="";render();syncAnimationAlgorithms();}
+ catch(e){last=[];el("error").textContent=e.message;el("results").innerHTML="";el("bars").innerHTML="";el("compareTable").innerHTML="";el("stats").innerHTML="";el("winner").textContent="";resetAnimationView(true);}
+}
+const label=t=>({SJF:"SJF (Non-preemptive)",SRTF:"SRTF (Preemptive SJF)",Priority:"Priority (Non-preemptive)","Priority-P":"Priority (Preemptive)",RR:"Round Robin"}[t]||t);
+function render(){
+  const best=[...last].sort((a,b)=>a.summary.avgWaiting-b.summary.avgWaiting)[0];
+ el("stats").innerHTML=[["Processes",processes.length],["Algorithms",last.length],["Total burst",processes.reduce((s,p)=>s+p.burst,0)],["RR quantum",quantum]].map(([k,v])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join("");
+ el("winner").textContent=`Lowest average waiting time in this workload: ${label(best.type)} (${fmt(best.summary.avgWaiting)} units). This is not a universal ranking; change the workload to compare outcomes.`;
+ el("compareTable").innerHTML=last.map(r=>`<tr><td><b>${esc(label(r.type))}</b></td><td>${fmt(r.summary.avgWaiting)}</td><td>${fmt(r.summary.avgTurnaround)}</td><td>${fmt(r.summary.avgResponse)}</td><td>${fmt(r.summary.utilization)}%</td><td>${fmt(r.summary.throughput)}</td></tr>`).join("");
+ const nameColors=new Map(processes.map((p,i)=>[p.id,colors[i%colors.length]]));
+ el("results").innerHTML=last.map(r=>{
+ const total=r.summary.finish||1;
+ const segments=r.timeline.map(s=>`<div class="segment ${s.id==="Idle"?"idle":""}" title="${esc(s.id)}: ${s.start}–${s.end}" style="flex:${s.end-s.start};background:${nameColors.get(s.id)||"#68788f"}">${(s.end-s.start)/total>.06?esc(s.id):""}<span class="dur">${s.end-s.start}</span></div>`).join("");
+ const boundaryTimes=[r.timeline[0]?.start??0,...r.timeline.map(s=>s.end)];
+ const boundaryMarks=r.timeline.map((s,i)=>`<span class="boundary-mark" style="left:${100*s.start/total}%">${s.start}</span>`).join("")+`<span class="boundary-mark boundary-final" style="left:100%">${r.summary.finish}</span>`;
+ const rows=r.rows.map(p=>`<tr><td>${esc(p.id)}</td><td>${p.arrival}</td><td>${p.burst}</td><td>${p.first}</td><td>${p.completion}</td><td>${p.waiting}</td><td>${p.turnaround}</td><td>${p.response}</td></tr>`).join("");
+ return `<article class="algo"><div class="algoh"><h3>${esc(label(r.type))} ${r.type==="RR"?"(q="+r.quantum+")":""}</h3><span class="pill">${r.timeline.length} execution blocks</span></div><div class="metrics">${[["Avg waiting",r.summary.avgWaiting],["Avg turnaround",r.summary.avgTurnaround],["Avg response",r.summary.avgResponse],["CPU utilization",fmt(r.summary.utilization)+"%"]].map(([k,v])=>`<div class="metric"><b>${typeof v==="number"?fmt(v):v}</b><small>${k}</small></div>`).join("")}</div><div class="timeline"><div class="gantt">${segments}</div><div class="gantt-boundaries">${boundaryMarks}</div><div class="ticks"><span>Start: 0</span><span>Finish: ${r.summary.finish}</span></div></div><div class="legend">${processes.map(p=>`<span><i class="dot" style="background:${nameColors.get(p.id)}"></i>${esc(p.id)}</span>`).join("")}<span><i class="dot" style="background:#68788f"></i>Idle</span></div><div class="table-scroll"><table><thead><tr><th>Process</th><th>Arrival</th><th>Burst</th><th>First start</th><th>Completion</th><th>Waiting</th><th>Turnaround</th><th>Response</th></tr></thead><tbody>${rows}</tbody></table></div></article>`;
+ }).join("");
+ renderBars();
+}
+function renderBars(){
+ const max=Math.max(.01,...last.map(r=>r.summary[metric]));
+ el("bars").innerHTML=last.map((r,i)=>`<div class="barrow"><b>${esc(label(r.type))}</b><div class="track"><div class="fill" style="width:${100*r.summary[metric]/max}%;background:${colors[i]}"></div></div><span>${fmt(r.summary[metric])}${metric==="utilization"?"%":""}</span></div>`).join("");
+}
+function stopAnimation(){if(animationTimer!==null){clearInterval(animationTimer);animationTimer=null;}animationPlaying=false;const b=el("playAnimation");if(b)b.textContent="▶ Play animation";const icon=el("cpuIcon"),light=el("liveLight");if(icon)icon.classList.remove("playing");if(light)light.classList.remove("playing");}
+function syncAnimationAlgorithms(){
+ const sel=el("liveAlgorithm"),prev=sel.value;
+ sel.innerHTML=last.map(r=>`<option value="${esc(r.type)}">${esc(label(r.type))}</option>`).join("");
+ if(last.some(r=>r.type===prev))sel.value=prev;
+ animationAlgorithm=sel.value;animationTime=0;resetAnimationView();
+}
+function resetAnimationView(empty=false){
+ animationTime=0;stopAnimation();
+ const result=empty?null:last.find(r=>r.type===el("liveAlgorithm").value)||last[0];
+ if(!result){el("liveProcess").textContent="No simulation";el("liveProcessInfo").textContent="Select an algorithm and run comparison";el("liveStatus").textContent="Check the input values above";el("liveTrack").innerHTML="";el("readyQueue").innerHTML="";el("liveFinish").textContent="Finish: —";el("liveLight").textContent="INPUT REQUIRED";el("liveProgressFill").style.width="0%";el("liveProgressText").textContent="0% completed";el("liveClock").textContent="0";return;}
+ el("liveLight").textContent="READY TO SIMULATE";
+ updateAnimationFrame();
+}
+function updateAnimationFrame(){
+ const r=last.find(x=>x.type===el("liveAlgorithm").value)||last[0];if(!r)return;
+ const t=animationTime,finish=r.summary.finish;
+ const seg=r.timeline.find(s=>s.start<=t&&t<s.end);
+ const current=t>=finish?null:seg;
+ el("liveClock").textContent=t;
+ el("liveFinish").textContent=`Finish: ${finish}`;
+ el("liveProgressFill").style.width=(100*Math.min(t/finish,1))+"%";
+ el("liveProgressText").textContent=`${Math.round(100*Math.min(t/finish,1))}% completed`;
+ const active=current?current.id:"";
+ el("liveProcess").textContent=t>=finish?"All completed!":active==="Idle"?"CPU idle":active||"Waiting";
+ el("liveProcessInfo").textContent=t>=finish?"Simulation finished successfully":active==="Idle"?"Waiting for the next process to arrive":`Executing ${active} from time ${t} to ${t+1}`;
+ const waiting=r.rows.filter(p=>p.arrival<=t&&p.completion>t&&p.id!==active);
+ el("readyQueue").innerHTML=waiting.length?waiting.map(p=>`<span class="process-chip">${esc(p.id)}</span>`).join(""):'<small class="muted">No processes waiting</small>';
+ el("liveStatus").textContent=t>=finish?"✓ CPU execution completed — review the Gantt chart and metrics below.":active==="Idle"?"CPU idle — no process has arrived yet.":`CPU is running ${active}; ${waiting.length} other process(es) waiting.`;
+ el("liveTrack").innerHTML=r.timeline.map(s=>{const d=s.end-s.start,executed=t>=s.end,partial=t>s.start&&t<s.end;const base=colors[Math.max(0,processes.findIndex(p=>p.id===s.id))%colors.length];const bg=s.id==="Idle"?"#8190a8":base;return `<div class="live-track-item ${executed?"executed":""} ${partial?"current":""}" title="${esc(s.id)}: ${s.start}–${s.end}" style="flex:${d};background:linear-gradient(to right,${bg} ${Math.max(0,Math.min(100,100*(t-s.start)/d))}%,#253b55 ${Math.max(0,Math.min(100,100*(t-s.start)/d))}%);opacity:${executed||partial?1:.35}">${d>=2?esc(s.id):""}</div>`;}).join("");
+ if(t>=finish){stopAnimation();el("liveLight").textContent="SIMULATION COMPLETE";}
+}
+function animationStep(){const r=last.find(x=>x.type===el("liveAlgorithm").value)||last[0];if(!r)return;if(animationTime>=r.summary.finish){stopAnimation();return;}animationTime+=1;updateAnimationFrame();}
+function startAnimation(){if(!last.length)return;const r=last.find(x=>x.type===el("liveAlgorithm").value)||last[0];if(animationPlaying){stopAnimation();el("liveLight").textContent="PAUSED";return;}if(animationTime>=r.summary.finish)animationTime=0;animationPlaying=true;el("playAnimation").textContent="⏸ Pause";el("liveLight").textContent="SIMULATION RUNNING";el("liveLight").classList.add("playing");el("cpuIcon").classList.add("playing");updateAnimationFrame();animationTimer=setInterval(animationStep,Number(el("animationSpeed").value));}
+el("liveAlgorithm").onchange=()=>{animationAlgorithm=el("liveAlgorithm").value;resetAnimationView();};
+el("playAnimation").onclick=startAnimation;
+el("stepAnimation").onclick=()=>{stopAnimation();animationStep();};
+el("restartAnimation").onclick=()=>resetAnimationView();
+el("animationSpeed").onchange=()=>{if(animationPlaying){stopAnimation();startAnimation();}};
+function download(name,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}
+el("processRows").addEventListener("change",e=>{const i=Number(e.target.dataset.i),k=e.target.dataset.key;if(!k||!processes[i])return;processes[i][k]=k==="id"?e.target.value.trim():Number(e.target.value);refresh();});
+el("processRows").addEventListener("click",e=>{if(e.target.dataset.remove===undefined)return;processes.splice(Number(e.target.dataset.remove),1);refresh();});
+el("add").onclick=()=>{if(processes.length>=20){el("error").textContent="Maximum 20 processes.";return;}processes.push({id:"P"+(++seq),arrival:0,burst:4,priority:2,uid:seq});refresh();};
+el("reset").onclick=()=>loadPreset("mixed");el("load").onclick=()=>loadPreset(el("preset").value);
+el("random").onclick=()=>{processes=Array.from({length:5},(_,i)=>({id:"P"+(i+1),arrival:Math.floor(Math.random()*8),burst:1+Math.floor(Math.random()*12),priority:1+Math.floor(Math.random()*5),uid:++seq}));refresh();};
+el("selected").onchange=updateSliders;
+for(const k of ["arrival","burst","priority"]){el(k+"Slider").oninput=e=>{const p=processes[Number(el("selected").value)||0];if(!p)return;p[k]=Number(e.target.value);el(k+"Value").textContent=p[k];const field=document.querySelector(`[data-i="${el("selected").value}"][data-key="${k}"]`);if(field)field.value=p[k];if(el("autoRun").checked)run();};}
+el("quantum").oninput=e=>{quantum=Number(e.target.value);el("qValue").textContent=quantum;if(el("autoRun").checked)run();};
+el("run").onclick=run;el("algos").onchange=()=>{if(el("autoRun").checked)run();};
+el("metricButtons").onclick=e=>{const b=e.target.closest("button[data-metric]");if(!b)return;metric=b.dataset.metric;document.querySelectorAll("#metricButtons button").forEach(x=>x.classList.toggle("primary",x===b));renderBars();};
+el("csv").onclick=()=>{if(!last.length)return;const header="Algorithm,Process,Arrival,Burst,Priority,First Start,Completion,Waiting,Turnaround,Response";const lines=last.flatMap(r=>r.rows.map(p=>[r.type,p.id,p.arrival,p.burst,p.priority,p.first,p.completion,p.waiting,p.turnaround,p.response].join(",")));download("cpu_scheduling_results.csv",[header,...lines].join("\n"),"text/csv");};
+el("json").onclick=()=>{if(last.length)download("cpu_scheduling_results.json",JSON.stringify({input:processes,quantum,results:last},null,2),"application/json");};
+loadPreset("mixed");
+</script></body></html>
